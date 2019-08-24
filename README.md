@@ -7,7 +7,7 @@ https://nutch.apache.org/
 ```java
 // src/test/org/apache/nutch/crawl/CrawlDbUpdateUtil.java
 
-public class CrawlDbUpdateUtil <T extends Reducer<Text, CrawlDatum, Text, CrawlDatum> {
+public class CrawlDbUpdateUtil <T extends Reducer<Text, CrawlDatum>, Text, CrawlDatum> {
 
   private static final Logger LOG = LoggerFactory
     .getLogger(MethodHandles.lookup().lookupClass());
@@ -77,21 +77,39 @@ public class CrawlDbUpdateUtil <T extends Reducer<Text, CrawlDatum, Text, CrawlD
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
   }
-}>
+}
 
+@SuppressWarnings("unchecked")
+public List<CrawlDatum> update(List<CrawlDatum> values) {
+  if (values == null || values.size() == 0) {
+    return new ArrayList<CrawlDatum>(0);
+  }
+  Collections.shuffle(values);
+  DummyContext context = new DummyContext();
+  try {
+    Iterable<CrawlDatum> iterable_values = (Iterable)values;
+    reducer.reduce(dummyURL, iterable_values, (Reducer<Text, CrawlDatum, Text, CrawlDatum>.Context) context);
+  } catch (IOException e) {
+    LOG.error(StringUtils.stringifyException(e));
+  } catch (InterruptedException e) {
+    LOG.error(StringUtils.stringifyException(e));
+  }
+  return context.getValues();
+}
+
+public List<CrawlDatum> update(CrawlDatum dbDatum, CrawlDatum fetchDatum) {
+  List<CrawlDatum> values = new ArrayList<CrawlDatum>();
+  if (dbDatum != null)
+    values.add(dbDatum);
+  if (fetchDatum != null)
+    values.add(fetchDatum);
+  return update(values);
+}
+
+public List<CrawlDatum> update(CrawlDatum... values) {
+  return update(Arrays.asList(values));
+}
 
 ```
 
